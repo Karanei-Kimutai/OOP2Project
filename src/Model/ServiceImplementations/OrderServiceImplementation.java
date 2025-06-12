@@ -25,7 +25,7 @@ public class OrderServiceImplementation extends UnicastRemoteObject implements I
     private final IStockService stockService;
     private final IDrinkDAO drinkDAO;
     private final IBranchDAO branchDAO;
-    protected OrderServiceImplementation(IOrderDAO orderDAO, IStockService stockService, IDrinkDAO drinkDAO,IBranchDAO branchDAO) throws RemoteException{
+    public OrderServiceImplementation(IOrderDAO orderDAO, IStockService stockService, IDrinkDAO drinkDAO, IBranchDAO branchDAO) throws RemoteException{
         super();
         this.orderDAO=orderDAO;
         this.stockService=stockService;

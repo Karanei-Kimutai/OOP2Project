@@ -12,7 +12,7 @@ import java.util.List;
 
 public class BranchServiceImplementation extends UnicastRemoteObject implements IBranchService{
     private final IBranchDAO branchDAO;
-    protected BranchServiceImplementation(IBranchDAO bDAO) throws RemoteException{
+    public BranchServiceImplementation(IBranchDAO bDAO) throws RemoteException{
         super();
         this.branchDAO=bDAO;
     }

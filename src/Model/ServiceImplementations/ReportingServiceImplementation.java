@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class ReportingServiceImplementation extends UnicastRemoteObject implements IReportingService {
     private final IOrderDAO orderDAO;
     private final IBranchDAO branchDAO;
-    protected ReportingServiceImplementation(IOrderDAO orderDAO,IBranchDAO branchDAO) throws RemoteException{
+    public ReportingServiceImplementation(IOrderDAO orderDAO, IBranchDAO branchDAO) throws RemoteException{
         super();
         this.orderDAO=orderDAO;
         this.branchDAO=branchDAO;

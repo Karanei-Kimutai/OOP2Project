@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public class AuthServiceImplementation extends UnicastRemoteObject implements IAuthService {
     private final IUserDAO userDAO;
-    protected AuthServiceImplementation(IUserDAO userDAO) throws RemoteException,Exception {
+    public AuthServiceImplementation(IUserDAO userDAO) throws RemoteException,Exception {
         super();
         this.userDAO=userDAO;
     }

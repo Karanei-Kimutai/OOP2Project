@@ -22,7 +22,7 @@ public class StockServiceImplementation extends UnicastRemoteObject implements I
     private final IStockItemDAO stockItemDAO;
     private final IBranchDAO branchDAO;
     private final IDrinkDAO drinkDAO;
-    protected StockServiceImplementation(IStockItemDAO siDAO,IBranchDAO bDAO,IDrinkDAO dDAO) throws RemoteException{
+    public StockServiceImplementation(IStockItemDAO siDAO, IBranchDAO bDAO, IDrinkDAO dDAO) throws RemoteException{
         super();
         this.stockItemDAO=siDAO;
         this.branchDAO=bDAO;
