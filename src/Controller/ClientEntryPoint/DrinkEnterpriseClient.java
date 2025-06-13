@@ -35,7 +35,7 @@ public class DrinkEnterpriseClient {
             System.out.println("Choose an option: ");
 
             String choice=mainScanner.nextLine().strip();
-            while(choice!="0"||choice!="1"||choice!="2"){
+            while(!choice.equals("0") && !choice.equals("1") && !choice.equals("2")){
                 System.out.println("Invalid option.");
                 System.out.println("Choose an option: ");
                 choice=mainScanner.nextLine();

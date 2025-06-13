@@ -71,9 +71,9 @@ public class CLIRunner implements Runnable{
 
     private void handleLogin(Scanner scanner) {
         try {
-            System.out.print("User: ");
+            System.out.print("Username: ");
             String username = scanner.nextLine().strip();
-            System.out.print("Pass: ");
+            System.out.print("Password: ");
             String password = scanner.nextLine().strip();
             loggedInUser = authService.login(username, password);
             System.out.println("CLI Login OK: " + loggedInUser.getUsername());
@@ -122,7 +122,7 @@ public class CLIRunner implements Runnable{
                     break;
                 case "A1":
                     if (isAdmin()) {
-                        System.out.print("DrID,Name,Brand,Price,HQStock (commas): ");
+                        System.out.print("DrinkID,DrinkName,Brand,Price,HQStock (commas): ");
                         String[] drinkParts = scanner.nextLine().strip().split(",");
                         drinkService.addDrink(new Drink(
                                 drinkParts[0].strip(),
@@ -136,7 +136,7 @@ public class CLIRunner implements Runnable{
                     break;
                 case "A2":
                     if (isAdmin()) {
-                        System.out.print("BrID,Name,Location (commas): ");
+                        System.out.print("BranchID,Name,Location (commas): ");
                         String[] branchParts = scanner.nextLine().strip().split(",");
                         branchService.addBranch(new Branch(
                                 branchParts[0].strip(),
@@ -148,7 +148,7 @@ public class CLIRunner implements Runnable{
                     break;
                 case "A3":
                     if (isAdmin()) {
-                        System.out.print("BrID,DrID,Qty (commas): ");
+                        System.out.print("BranchID,DrinkID,Quantity (commas): ");
                         String[] stockLevelParts = scanner.nextLine().strip().split(",");
                         stockService.setStockLevel(
                                 stockLevelParts[0].strip(),
@@ -160,7 +160,7 @@ public class CLIRunner implements Runnable{
                     break;
                 case "A4":
                     if (isAdmin()) {
-                        System.out.print("BrID,DrID,Thr (commas): ");
+                        System.out.print("BranchID,DrinkID,Threshold (commas): ");
                         String[] thresholdParts = scanner.nextLine().strip().split(",");
                         stockService.setStockThreshold(
                                 thresholdParts[0].strip(),
@@ -172,7 +172,7 @@ public class CLIRunner implements Runnable{
                     break;
                 case "A5":
                     if (isAdmin()) {
-                        System.out.print("FromBr,ToBr,DrID,Qty (commas): ");
+                        System.out.print("FromBranch,ToBranch,DrinkID,Quantity (commas): ");
                         String[] transferParts = scanner.nextLine().strip().split(",");
                         stockService.transferStock(
                                 transferParts[0].strip(),
@@ -185,7 +185,7 @@ public class CLIRunner implements Runnable{
                     break;
                 case "A6":
                     if (isAdmin()) {
-                        System.out.print("User,Pass,Role(ADMIN/BRANCH_MANAGER/STAFF) (commas): ");
+                        System.out.print("Username,Password,Role(ADMIN/BRANCH_MANAGER/STAFF) (commas): ");
                         String[] userParts = scanner.nextLine().strip().split(",");
                         authService.addUser(
                                 userParts[0].strip(),
