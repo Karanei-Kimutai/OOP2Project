@@ -79,28 +79,28 @@ public class DrinkEnterpriseServer {
             }
 
             // Add initial drinks
-            if (!drinkDAO.findById("DK001").isPresent()) {
-                drinkService.addDrink(new Drink("DK001", "Coca-Cola 500ml", "Coca-Cola", 60.00, 1000));
+            if (!drinkDAO.findById("CocaCola500ml").isPresent()) {
+                drinkService.addDrink(new Drink("CocaCola500ml", "Coca-Cola 500ml", "Coca-Cola", 60.00, 1000));
             }
-            if (!drinkDAO.findById("DK002").isPresent()) {
-                drinkService.addDrink(new Drink("DK002", "Pepsi 500ml", "PepsiCo", 55.00, 800));
+            if (!drinkDAO.findById("Pepsi500ml").isPresent()) {
+                drinkService.addDrink(new Drink("Pepsi500ml", "Pepsi 500ml", "Pepsi", 55.00, 800));
             }
-            if (!drinkDAO.findById("DK003").isPresent()) {
-                drinkService.addDrink(new Drink("DK003", "Fanta 300ml", "Coca-Cola", 45.00, 700));
+            if (!drinkDAO.findById("Fanta300ml").isPresent()) {
+                drinkService.addDrink(new Drink("Fanta300ml", "Fanta 300ml", "Coca-Cola", 45.00, 700));
             }
 
             // Add other branches
-            if (!branchDAO.findById("NKR01").isPresent()) {
-                branchService.addBranch(new Branch("NKR01", "Nakuru Central", "Nakuru"));
+            if (!branchDAO.findById("Nakuru").isPresent()) {
+                branchService.addBranch(new Branch("Nakuru", "Nakuru Central", "Nakuru"));
             }
-            if (!branchDAO.findById("MSA01").isPresent()) {
-                branchService.addBranch(new Branch("MSA01", "Mombasa Island", "Mombasa"));
+            if (!branchDAO.findById("Mombasa").isPresent()) {
+                branchService.addBranch(new Branch("Mombasa", "Mombasa Island", "Mombasa"));
             }
 
             // Perform initial stock transfers
-            transferInitial(stockService, "NKR01", "DK001", 100, 20);
-            transferInitial(stockService, "NKR01", "DK002", 80, 15);
-            transferInitial(stockService, "MSA01", "DK001", 150, 25);
+            transferInitial(stockService, "Nakuru", "CocaCola500ml", 100, 20);
+            transferInitial(stockService, "Nakuru", "Pepsi500ml", 80, 15);
+            transferInitial(stockService, "Mombasa", "CocaCola500ml", 150, 25);
 
             // Add users
             if (!userDAO.findByUserName("Admin").isPresent()) {
