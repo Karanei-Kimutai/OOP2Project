@@ -17,8 +17,8 @@ import java.util.List;
 public class DrinkServiceImplementation extends UnicastRemoteObject implements IDrinkService {
     private final IDrinkDAO drinkDAO;
     private final IStockItemDAO stockItemDAO;
-    public static final String HQ_BRANCH_ID_CONST="NAIROBI_HQ";//Central definition
-    protected DrinkServiceImplementation(IDrinkDAO dDAO,IStockItemDAO siDAO) throws RemoteException{
+    public static final String HQ_BRANCH_ID_CONST="Nairobi";//Central definition
+    public DrinkServiceImplementation(IDrinkDAO dDAO, IStockItemDAO siDAO) throws RemoteException{
         super();
         this.drinkDAO=dDAO;
         this.stockItemDAO=siDAO;
