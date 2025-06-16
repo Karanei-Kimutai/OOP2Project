@@ -61,61 +61,55 @@ public class DrinkEnterpriseServer {
         }
     }
 
-    private static void setupInitialData(
-            IDrinkService drinkService,
-            IBranchService branchService,
-            IStockService stockService,
-            IAuthService authService,
-            IUserDAO userDAO,
-            IBranchDAO branchDAO,
-            IDrinkDAO drinkDAO
-    ) {
+    private static void setupInitialData(IDrinkService drinkService, IBranchService branchService, IStockService stockService, IAuthService authService, IUserDAO userDAO, IBranchDAO branchDAO, IDrinkDAO drinkDAO) {
         System.out.println("Setting up initial data (if necessary)...");
 
         try {
-            // Add HQ branch
+            // Add HQ branch first
             if (!branchDAO.findById(HQ_BRANCH_ID_SVR).isPresent()) {
-                branchService.addBranch(new Branch(HQ_BRANCH_ID_SVR, "Nairobi HQ", "Nairobi"));
-            }
-
-            // Add initial drinks
-            if (!drinkDAO.findById("CocaCola500ml").isPresent()) {
-                drinkService.addDrink(new Drink("CocaCola500ml", "Coca-Cola 500ml", "Coca-Cola", 60.00, 1000));
-            }
-            if (!drinkDAO.findById("Pepsi500ml").isPresent()) {
-                drinkService.addDrink(new Drink("Pepsi500ml", "Pepsi 500ml", "Pepsi", 55.00, 800));
-            }
-            if (!drinkDAO.findById("Fanta300ml").isPresent()) {
-                drinkService.addDrink(new Drink("Fanta300ml", "Fanta 300ml", "Coca-Cola", 45.00, 700));
+                branchService.addBranch(new Branch(HQ_BRANCH_ID_SVR, "NairobiHQ", "Nairobi"));
             }
 
             // Add other branches
             if (!branchDAO.findById("Nakuru").isPresent()) {
-                branchService.addBranch(new Branch("Nakuru", "Nakuru Central", "Nakuru"));
+                branchService.addBranch(new Branch("Nakuru", "NakuruBranch", "Nakuru"));
             }
             if (!branchDAO.findById("Mombasa").isPresent()) {
-                branchService.addBranch(new Branch("Mombasa", "Mombasa Island", "Mombasa"));
+                branchService.addBranch(new Branch("Mombasa", "MombasaBranch", "Mombasa"));
             }
 
-            // Perform initial stock transfers
-            transferInitial(stockService, "Nakuru", "CocaCola500ml", 100, 20);
-            transferInitial(stockService, "Nakuru", "Pepsi500ml", 80, 15);
-            transferInitial(stockService, "Mombasa", "CocaCola500ml", 150, 25);
-
-            // Add users
-            if (!userDAO.findByUserName("Admin").isPresent()) {
-                authService.addUser("Admin", "password", User.UserRole.ADMIN);
+            // Add drinks (addDrink in service now handles initial HQ stock)
+            if (!drinkDAO.findById("Coca-Cola500ml").isPresent()) {
+                drinkService.addDrink(new Drink("Coca-Cola500ml", "Coca-Cola 500ml", "Coca-Cola", 60.00, 1000000));
             }
-            if (!userDAO.findByUserName("NakuruManager").isPresent()) {
-                authService.addUser("NakuruManager", "password", User.UserRole.BRANCH_MANAGER);
+            if (!drinkDAO.findById("Pepsi500ml").isPresent()) {
+                drinkService.addDrink(new Drink("Pepsi500ml", "Pepsi 500ml", "PepsiCo", 55.00, 800000));
+            }
+            if (!drinkDAO.findById("Fanta300ml").isPresent()) {
+                drinkService.addDrink(new Drink("Fanta300ml", "Fanta 300ml", "Coca-Cola", 45.00, 700000));
+            }
+
+            // Initial stock transfer (idempotent-ish)
+            transferInitial(stockService, "Nakuru", "Coca-Cola500ml", 100000, 20000);
+            transferInitial(stockService, "Nakuru", "Pepsi500ml",  80000, 15000);
+            transferInitial(stockService, "Mombasa", "Coca-Cola500ml", 150000, 25000);
+
+            // Add users with branch assignments
+            if (!userDAO.findByUsername("Admin").isPresent()) {
+                authService.addUser("Admin", "password", User.UserRole.ADMIN, null); // Admin has no branch
+            }
+            if (!userDAO.findByUsername("NakuruManager").isPresent()) {
+                authService.addUser("NakuruManager", "password", User.UserRole.BRANCH_MANAGER, "Nakuru"); // Assigned to Nakuru
             }
 
             System.out.println("Initial data setup complete.");
-
         } catch (Exception e) {
             System.err.println("Error during initial data setup: " + e.getMessage());
+            e.printStackTrace();
         }
     }
+
+
 
     private static void transferInitial(IStockService stockService, String branchId, String drinkId, int quantity, int threshold) {
         try {

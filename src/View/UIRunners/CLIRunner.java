@@ -190,7 +190,8 @@ public class CLIRunner implements Runnable{
                         authService.addUser(
                                 userParts[0].strip(),
                                 userParts[1].strip(),
-                                User.UserRole.valueOf(userParts[2].strip().toUpperCase())
+                                User.UserRole.valueOf(userParts[2].strip().toUpperCase()),
+                                userParts[3].strip()
                         );
                         System.out.println("User added.");
                     }
