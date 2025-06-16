@@ -54,7 +54,7 @@ public class DrinkEnterpriseClient {
 
             }
             if(startGUI){
-                new Thread(new GUIRunner(authService,drinkService,branchService,stockService,orderService,reportingService));
+                new Thread(new GUIRunner(authService,drinkService,branchService,stockService,orderService,reportingService),"GUI-Thread").start();
                 System.out.println("GUI thread for starter initiated");
             }
         } catch (Exception e) {
