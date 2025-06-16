@@ -3,6 +3,7 @@ package Controller.ClientEntryPoint;
 import Model.ServiceInterfaces.*;
 import Model.UtilitiesandServerEntryPoint.DrinkEnterpriseServer;
 import View.UIRunners.CLIRunner;
+import View.UIRunners.GUIRunner;
 
 import java.rmi.Naming;
 import java.util.Scanner;
@@ -53,7 +54,8 @@ public class DrinkEnterpriseClient {
 
             }
             if(startGUI){
-
+                new Thread(new GUIRunner(authService,drinkService,branchService,stockService,orderService,reportingService));
+                System.out.println("GUI thread for starter initiated");
             }
         } catch (Exception e) {
             System.err.println("Client main exception: "+e);
