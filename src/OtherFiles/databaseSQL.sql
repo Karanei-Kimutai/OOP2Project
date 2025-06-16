@@ -1,3 +1,7 @@
+-- Drink Enterprise Database Schema DDL for MySQL
+ CREATE DATABASE IF NOT EXISTS drink_enterprise_db;
+ USE drink_enterprise_db;
+
 CREATE TABLE IF NOT EXISTS branches (
     branch_id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
