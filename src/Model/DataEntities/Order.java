@@ -40,8 +40,6 @@ public class Order implements Serializable {
     // Setter for items (e.g., when DAO populates them after fetching the order header)
     public void setItems(List<OrderItem> items) {
         this.items = items != null ? new ArrayList<>(items) : new ArrayList<>();
-        // Optionally recalculate total amount if items are set/changed
-        this.totalAmount = this.items.stream().mapToDouble(OrderItem::getItemTotal).sum();
     }
 
     @Override
