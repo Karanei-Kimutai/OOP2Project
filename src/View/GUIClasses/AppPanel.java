@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 import Model.DataEntities.Branch;
@@ -28,6 +31,7 @@ public class AppPanel extends JPanel {
     private final JPanel placeOrderPanel;
     private final JPanel reportsPanel;
     private final JPanel adminConsolePanel;
+    private final JPanel viewStockPanel;
 
     private final IDrinkService drinkService;
     private final IBranchService branchService;
@@ -62,6 +66,9 @@ public class AppPanel extends JPanel {
         placeOrderPanel = createPlaceOrderPanel();
         tabbedPane.addTab("Place Order", null, placeOrderPanel, "Create a new customer order");
 
+        viewStockPanel = createViewStockPanel(); // New
+        tabbedPane.addTab("View Stock", null, viewStockPanel, "View current stock levels");
+
         reportsPanel = createReportsPanel();
         tabbedPane.addTab("Reports", null, reportsPanel, "View sales and stock reports");
 
@@ -75,6 +82,7 @@ public class AppPanel extends JPanel {
         add(tabbedPane, BorderLayout.CENTER);
     }
 
+
     public void refreshAllDataPanels() {
         if(viewDrinksPanel != null && viewDrinksPanel.getClientProperty("refreshButton") instanceof JButton) {
             SwingUtilities.invokeLater(((JButton)viewDrinksPanel.getClientProperty("refreshButton"))::doClick);
@@ -84,6 +92,9 @@ public class AppPanel extends JPanel {
         }
         if(placeOrderPanel != null && placeOrderPanel.getClientProperty("refreshAction") instanceof Runnable) {
             SwingUtilities.invokeLater((Runnable)placeOrderPanel.getClientProperty("refreshAction"));
+        }
+        if(viewStockPanel != null && viewStockPanel.getClientProperty("refreshButton") instanceof JButton) {
+            SwingUtilities.invokeLater(((JButton)viewStockPanel.getClientProperty("refreshButton"))::doClick);
         }
         if(reportsPanel != null && reportsPanel.getClientProperty("refreshAction") instanceof Runnable) {
             SwingUtilities.invokeLater((Runnable)reportsPanel.getClientProperty("refreshAction"));
@@ -227,6 +238,115 @@ public class AppPanel extends JPanel {
 
         SwingUtilities.invokeLater(refreshButton::doClick);
         return panel;
+    }
+    private JPanel createViewStockPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Top panel for branch selection
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JComboBox<Branch> branchComboBox = new JComboBox<>();
+        JButton loadStockButton = new JButton("Load Stock");
+        topPanel.add(new JLabel("Select Branch:"));
+        topPanel.add(branchComboBox);
+        topPanel.add(loadStockButton);
+        panel.add(topPanel, BorderLayout.NORTH);
+
+        // Center panel for the stock table
+        String[] columnNames = {"Drink ID", "Drink Name", "Quantity in Stock"};
+        DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+            @Override public boolean isCellEditable(int row, int column) { return false; }
+        };
+        JTable stockTable = new JTable(tableModel);
+        stockTable.setFillsViewportHeight(true);
+        stockTable.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        stockTable.setRowHeight(25);
+        panel.add(new JScrollPane(stockTable), BorderLayout.CENTER);
+
+        // Refresh button for external calls
+        JButton refreshButton = new JButton();
+        panel.putClientProperty("refreshButton", refreshButton);
+        refreshButton.addActionListener(e -> {
+            if (loggedInUser.getRole() == User.UserRole.ADMIN) {
+                loadStockButton.doClick(); // Admins trigger the load button
+            } else {
+                loadStockForBranch(loggedInUser.getBranchId(), tableModel); // Non-admins load their branch
+            }
+        });
+
+        // Load branches into ComboBox
+        new SwingWorker<List<Branch>, Void>() {
+            @Override
+            protected List<Branch> doInBackground() throws Exception {
+                return branchService.getAllBranches();
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    List<Branch> branches = get();
+                    branches.forEach(branchComboBox::addItem);
+
+                    if (loggedInUser.getRole() != User.UserRole.ADMIN && loggedInUser.getBranchId() != null) {
+                        for (int i = 0; i < branchComboBox.getItemCount(); i++) {
+                            if (branchComboBox.getItemAt(i).getId().equals(loggedInUser.getBranchId())) {
+                                branchComboBox.setSelectedIndex(i);
+                                break;
+                            }
+                        }
+                        branchComboBox.setEnabled(false);
+                        loadStockButton.setVisible(false); // Hide button for non-admins
+                        loadStockForBranch(loggedInUser.getBranchId(), tableModel); // Auto-load their stock
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(panel, "Error loading branches: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }.execute();
+
+        // Action listener for the "Load Stock" button (for Admins)
+        loadStockButton.addActionListener(e -> {
+            Branch selectedBranch = (Branch) branchComboBox.getSelectedItem();
+            if (selectedBranch != null) {
+                loadStockForBranch(selectedBranch.getId(), tableModel);
+            }
+        });
+
+        return panel;
+    }
+    private void loadStockForBranch(String branchId, DefaultTableModel tableModel) {
+        tableModel.setRowCount(0); // Clear the table
+
+        new SwingWorker<Map<String, Integer>, Void>() {
+            private Map<String, Drink> drinkMap;
+
+            @Override
+            protected Map<String, Integer> doInBackground() throws Exception {
+                // Fetch all drinks to get their names, and stock for the specific branch
+                List<Drink> allDrinks = drinkService.getAllDrinks();
+                drinkMap = allDrinks.stream().collect(Collectors.toMap(Drink::getId, drink -> drink));
+                return stockService.getStockForBranch(branchId);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    Map<String, Integer> stockLevels = get();
+                    if (stockLevels.isEmpty()) {
+                        // Optionally show a message
+                    } else {
+                        for (Map.Entry<String, Integer> entry : stockLevels.entrySet()) {
+                            String drinkId = entry.getKey();
+                            Integer quantity = entry.getValue();
+                            String drinkName = drinkMap.getOrDefault(drinkId, new Drink(drinkId, "Unknown Drink", "", 0)).getName();
+                            tableModel.addRow(new Object[]{drinkId, drinkName, quantity});
+                        }
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(AppPanel.this, "Error loading stock: " + (ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage()), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }.execute();
     }
 
     private JPanel createPlaceOrderPanel() {
@@ -404,7 +524,9 @@ public class AppPanel extends JPanel {
                 @Override protected Order doInBackground() throws Exception {
                     return orderService.placeOrder(customerId, selectedBranch.getId(), currentOrderItemsMap);
                 }
-                @Override protected void done() {
+
+                @Override
+                protected void done() {
                     try {
                         Order placedOrder = get();
                         placeOrderStatusLabel.setText("Order placed successfully! ID: " + placedOrder.getOrderId());
@@ -414,12 +536,30 @@ public class AppPanel extends JPanel {
                         currentOrderDrinkObjects.clear();
                         updateOrderCartTable(orderCartModel, currentOrderItemsMap, currentOrderDrinkObjects, orderTotalLabel);
                         customerIdField.setText("CUST-" + System.currentTimeMillis() % 10000);
-                    } catch (Exception ex) {
-                        String err = "Order submission failed: " + (ex.getCause()!=null ? ex.getCause().getMessage() : ex.getMessage());
-                        placeOrderStatusLabel.setText(err);
-                        placeOrderStatusLabel.setForeground(Color.RED);
-                        JOptionPane.showMessageDialog(panel, err, "Order Submission Error", JOptionPane.ERROR_MESSAGE);
-                    } finally {
+                    }
+                    catch (Exception ex) {
+                    String errorMessage = "Items not in stock: ";
+                    Throwable cause = ex.getCause();
+
+                    if (cause != null) {
+                        // Look for the pattern "Stock for [item] at [branch] not found"
+                        Pattern pattern = Pattern.compile("Stock for .* at .* not found");
+                        Matcher matcher = pattern.matcher(cause.getMessage());
+
+                        if (matcher.find()) {
+                            errorMessage += matcher.group();
+                        } else {
+                            errorMessage += "Some items are unavailable";
+                        }
+                    } else {
+                        errorMessage += "Some items are unavailable";
+                    }
+
+                    placeOrderStatusLabel.setText(errorMessage);
+                    placeOrderStatusLabel.setForeground(Color.RED);
+                    JOptionPane.showMessageDialog(panel, errorMessage, "Order Submission Error", JOptionPane.ERROR_MESSAGE);
+                }
+                    finally {
                         submitOrderButton.setEnabled(true);
                     }
                 }
