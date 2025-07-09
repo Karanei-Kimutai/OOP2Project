@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
@@ -523,7 +525,9 @@ public class AppPanel extends JPanel {
                 @Override protected Order doInBackground() throws Exception {
                     return orderService.placeOrder(customerId, selectedBranch.getId(), currentOrderItemsMap);
                 }
-                @Override protected void done() {
+
+                @Override
+                protected void done() {
                     try {
                         Order placedOrder = get();
                         placeOrderStatusLabel.setText("Order placed successfully! ID: " + placedOrder.getOrderId());
@@ -533,12 +537,30 @@ public class AppPanel extends JPanel {
                         currentOrderDrinkObjects.clear();
                         updateOrderCartTable(orderCartModel, currentOrderItemsMap, currentOrderDrinkObjects, orderTotalLabel);
                         customerIdField.setText("CUST-" + System.currentTimeMillis() % 10000);
-                    } catch (Exception ex) {
-                        String err = "Order submission failed: " + (ex.getCause()!=null ? ex.getCause().getMessage() : ex.getMessage());
-                        placeOrderStatusLabel.setText(err);
-                        placeOrderStatusLabel.setForeground(Color.RED);
-                        JOptionPane.showMessageDialog(panel, err, "Order Submission Error", JOptionPane.ERROR_MESSAGE);
-                    } finally {
+                    }
+                    catch (Exception ex) {
+                    String errorMessage = "Items not in stock: ";
+                    Throwable cause = ex.getCause();
+
+                    if (cause != null) {
+                        // Look for the pattern "Stock for [item] at [branch] not found"
+                        Pattern pattern = Pattern.compile("Stock for .* at .* not found");
+                        Matcher matcher = pattern.matcher(cause.getMessage());
+
+                        if (matcher.find()) {
+                            errorMessage += matcher.group();
+                        } else {
+                            errorMessage += "Some items are unavailable";
+                        }
+                    } else {
+                        errorMessage += "Some items are unavailable";
+                    }
+
+                    placeOrderStatusLabel.setText(errorMessage);
+                    placeOrderStatusLabel.setForeground(Color.RED);
+                    JOptionPane.showMessageDialog(panel, errorMessage, "Order Submission Error", JOptionPane.ERROR_MESSAGE);
+                }
+                    finally {
                         submitOrderButton.setEnabled(true);
                     }
                 }

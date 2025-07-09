@@ -3,8 +3,9 @@ package Model.UtilitiesandServerEntryPoint;
 import java.sql.*;
 
 public class DatabaseManager {
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/drink_enterprise_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";    private static final String DB_USER="root";
-    private static final String DB_PASSWORD="4563";
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/drink_enterprise_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+    private static final String DB_USER="root";
+    private static final String DB_PASSWORD="200517";
 
     static{
         try{
