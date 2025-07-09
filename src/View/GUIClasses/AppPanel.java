@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 
+import Controller.ClientEntryPoint.ClientConstants;
 import Model.DataEntities.Branch;
 import Model.DataEntities.Drink;
 import Model.DataEntities.Order;
@@ -839,19 +840,55 @@ public class AppPanel extends JPanel {
         gbc.gridwidth=1;gbc.fill=GridBagConstraints.NONE;
         gbc.gridx=0;gbc.gridy=3;gbc.gridwidth=4;gbc.anchor=GridBagConstraints.CENTER;panel.add(statusLabel,gbc);
 
+        // Inside createManageStockPanel() method in AppPanel.java
+
+        setStockButton.setText("Transfer from HQ"); // Optional: Change button text for clarity
         setStockButton.addActionListener(e -> {
             try {
-                String branchId=branchIdField.getText(), drinkId=drinkIdField.getText();
-                int quantity=Integer.parseInt(quantityField.getText());
-                if(branchId.isEmpty()||drinkId.isEmpty())throw new IllegalArgumentException("IDs req.");
-                statusLabel.setText("Setting level...");statusLabel.setForeground(Color.BLUE);
-                new SwingWorker<Void,Void>() {
-                    protected Void doInBackground()throws Exception{stockService.setStockLevel(branchId,drinkId,quantity);return null;}
-                    protected void done(){try{get();statusLabel.setText("Level set for "+drinkId);statusLabel.setForeground(new Color(0,128,0));quantityField.setText("");}catch(Exception ex){String err="Err: "+(ex.getCause()!=null?ex.getCause().getMessage():ex.getMessage());statusLabel.setText(err);statusLabel.setForeground(Color.RED);JOptionPane.showMessageDialog(panel,err,"Error",0);}}
+                String destinationBranchId = branchIdField.getText();
+                String drinkId = drinkIdField.getText();
+                int quantity = Integer.parseInt(quantityField.getText());
+                // The source branch is the consistently defined HQ branch
+                String sourceBranchId = ClientConstants.HQ_BRANCH_ID_CLIENT;
+
+                if (destinationBranchId.isEmpty() || drinkId.isEmpty()) {
+                    throw new IllegalArgumentException("Destination Branch ID and Drink ID are required.");
+                }
+                if (quantity <= 0) {
+                    throw new IllegalArgumentException("Transfer quantity must be positive.");
+                }
+                if (sourceBranchId.equals(destinationBranchId)) {
+                    throw new IllegalArgumentException("Destination cannot be the same as HQ source.");
+                }
+
+                statusLabel.setText("Transferring stock...");
+                statusLabel.setForeground(Color.BLUE);
+
+                new SwingWorker<Void, Void>() {
+                    protected Void doInBackground() throws Exception {
+                        // Call the transferStock method instead of setStockLevel
+                        stockService.transferStock(sourceBranchId, destinationBranchId, drinkId, quantity);
+                        return null;
+                    }
+                    protected void done() {
+                        try {
+                            get();
+                            statusLabel.setText("Transferred " + quantity + " of " + drinkId + " to " + destinationBranchId);
+                            statusLabel.setForeground(new Color(0, 128, 0));
+                            quantityField.setText("");
+                            mainFrame.refreshDataViews(); // Refresh other panels
+                        } catch (Exception ex) {
+                            String err = "Error: " + (ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage());
+                            statusLabel.setText(err);
+                            statusLabel.setForeground(Color.RED);
+                            JOptionPane.showMessageDialog(panel, err, "Transfer Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
                 }.execute();
-            } catch(IllegalArgumentException ex) {
-                statusLabel.setText("Err: "+ex.getMessage());statusLabel.setForeground(Color.RED);
-                JOptionPane.showMessageDialog(panel,"Invalid input: "+ex.getMessage(),"Error",0);
+            } catch (IllegalArgumentException ex) {
+                statusLabel.setText("Error: " + ex.getMessage());
+                statusLabel.setForeground(Color.RED);
+                JOptionPane.showMessageDialog(panel, "Invalid input: " + ex.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
             }
         });
         setThresholdButton.addActionListener(e -> {
